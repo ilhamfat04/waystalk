@@ -1,0 +1,117 @@
+-- ===================================
+-- menampilkan daftar buku yang tidak dipinjam
+-- Mengganti NOT IN dengan NOT EXISTS
+-- ====================================
+use testing;
+
+SELECT title, author 
+FROM books
+WHERE books.id NOT IN (SELECT book_id FROM borrow_details);
+
+SELECT 
+FROM books
+WHERE NOT EXISTS (SELECT book_id FROM borrow_details WHERE books.id = borrow_details.book_id);
+
+-- ====================================================================
+-- menampilkan daftar buku yang dipinjam oleh member dengan nama Moh
+-- ====================================================================
+
+SELECT name, title, author, date
+FROM member m, borrows br, borrow_details bd, books b
+WHERE m.id = br.member_id
+AND br.id = bd.borrow_id
+AND bd.book_id = b.id
+AND name LIKE '%Moh%';
+
+SELECT m.id,name,title, author, date
+FROM books b
+JOIN borrow_details bd
+ON b.id = bd.book_id
+JOIN borrows br
+ON br.id = bd.borrow_id
+JOIN member m
+ON m.id = br.member_id
+WHERE name LIKE '%Moh%';
+
+SELECT name,title, author
+FROM books b
+RIGHT JOIN borrow_details bd
+ON b.id = bd.book_id
+RIGHT JOIN borrows br
+ON br.id = bd.borrow_id
+RIGHT JOIN member m
+ON m.id = br.member_id
+WHERE name LIKE '%Moh%';
+
+SELECT name,title, author
+FROM books b
+LEFT JOIN borrow_details bd
+ON b.id = bd.book_id
+LEFT JOIN borrows br
+ON br.id = bd.borrow_id
+LEFT JOIN member m
+ON m.id = br.member_id
+WHERE name LIKE '%Moh%';
+
+-- ==================================================== 
+-- Hindari mismatch tipe data untuk pengindeksan kolom
+-- ====================================================
+
+select br.,m. , b.title
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+and br.id  '400'
+and m.id  '1200'
+and date between '2021-01-20' and '2022-01-04' ;
+
+select br.,m.,b.title
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+and br.id  400 
+and m.id  1200 
+and date between '2021-01-20' and '2022-01-04' ;
+
+-- ========================== 
+-- Hindari fungsi pada kolom yang diindeks
+-- ========================== 
+
+select br.,m. , b.title
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+and date between '2021-01-20' and '2022-01-04'
+and substr(name,1,3)='Moh';
+
+select br.,m. , b.title
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+and date between '2021-01-20' and '2022-01-04'
+and name like '%Moh%' ;
+
+-- ========================== 
+-- Menentukan kondisi pada WHERE bukan pada HAVING (sukses)
+-- ========================== 
+select m.name , count(br.member_id)
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+group by name
+having 
+name like '%Moh%';
+
+select m.name , count(br.member_id)
+from member m, borrows br, borrow_details bd, books b
+where m.id = br.member_id
+and br.id = bd.borrow_id
+and b.id = bd.book_id
+and name like '%Moh%'
+group by name;
+
